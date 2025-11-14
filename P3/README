@@ -1,0 +1,122 @@
+Weston Lane [wrl24]
+Jeremy Ruiz [jr2051]
+
+Test Plan
+    For our test plan, we sought to first test often and after the implementation of basic functionality.
+    We inherently went about testing by always focusing on what we deemed most important first.
+    As per the assignment instructions, we chose to follow the format given explicity of:
+
+    (1) First specifying requirements that need to be fulfilled
+    (2) Describe how they might be violated 
+    (3) Wrote programs to check their behavior
+
+    With this structure, it was easy to isolate what errors we would expect to see even if we did not run into them previously, and
+    got us thinking about where we might be prone to have errors during creation instead of afterwards. 
+    We chose to start with simple correctness testing of whether malloc(), free(), and the leak detector were working properly
+    before going into stress testing and edge cases. We reasoned that large errors such as whether our functions would behave properly
+    was a larger priority than edge cases. This translated to testing in order: 
+    (1) Whether malloc() was predictably returning a usable pointer,
+    (2) Whether free() was actually freeing the space in the heap,
+    (3) Whether leakDetector was detecting pointers not being freed,
+    (4) Whether chunks were properly being split in order to make them smaller,
+    (5) Whether chunks were coalescing correctly in order to be combined,
+    (6) And finally whether the three explicitly given detectable errors in Section 2.1 of the assignment were addressed.
+
+    (part of the testing included a PrintHeap function that was directly inside of mymalloc.c, however for the final build was removed since
+     it required direct access to the Heap array and modification of the mymalloc.h file.
+     This function printed each byte of the Heap in order given and interval. Very useful for seeing what exactly was happening inside and if header vals were correct)
+
+     
+
+    After these were completed, we immediately moved on to stress testing with memgrind. In memgrind, we essentially followed
+    all of the suggestions in the assignment, putting our functions under heavy load and observing the behavior, with our other two tests being:
+    - A linked list (as per assignment instructions)
+    - Dynamic array
+    After seeing acceptable results, we continued with correctness testing once again, as edge cases were now our largest point of importance.
+    For our remaining tests, we applied the logic given in the assignment on how correctness tests should be completed,
+    "correctness tests may only involve a small number of operations over a short period of time" in order to create a robust 
+    and easily expandable, repeatable, and configurable complete suite of test cases. Perhaps unintuitively,
+    instead of checking for whether they would pass, we tested with the concept that they were meant to fail (such as double free).
+
+Descriptions of Test Programs
+    - memtest.c is a quick and dirty approach to troubleshooting and getting the proper heap management logic completed. Mostly a random assortment of
+        malloc, free, and print statements that take advantage of the PrintHeap function.
+
+    - memtest2.c is the more robust test program used when the skeleton of the Heap logic was established. Allowing for more careful control of test cases and
+        corner cases of the library
+        
+    We have 2 test programs memtest.c and memtest2.c, that takes no arguments when ran but memtest2.c opens up a selectable menu to test specific, repeatable,
+    expected functionality along with many edge cases or predictable points of failure. A list of tested behavior and function descriptions is provided below:
+
+    (1) Requirement: Malloc() reserves unallocated memory
+        Detection Method: When successful, malloc() returns a pointer to an object that does not 
+        overlap with any other object.
+        Test: Program allocates large objects. When allocation is complete, it fills each object with a distinct byte pattern,
+        each object is filled sequentially. It then confirms that writing to an object did not overwrite any other.
+    
+    (2) Requirement: Free() deallocates memory
+        Detection Method: Allocated memory in the heap should no longer be allocated when it is freed.
+        Test: Use malloc() to allocate some memory, free the used memory, then see if there there is still memory and whether we can
+        allocate to it again.
+    
+    (3) Requirement: Calling free() with an address not obtained from malloc()
+        Detection Method: The program should provided an error and exit(2) when using an address that was not given by malloc().
+        Test: Create a variable int x and immediately free its address. Expected to stop program.
+    
+    (4) Requirement: Calling free() with an address not at the start of the chunk
+        Detection Method: Increment the pointer to start somewhere within a chunk instead of at the very beginning. This should expectedly not be allowed.
+        Test: Create a pointer with malloc() and attempt to free it after the location has been incremented.
+
+    (5) Requirement: Calling free() a second time on the same pointer
+        Detection Method: Double free() calls, immediately one after another.
+        Test: Call free() on a pointer given from malloc() that has already been freed. This should exit(2) and fail.
+
+    (6) Requirement: Testing 8 byte alignment
+        Detection Method: Check to see if the value when allocated becomes a number divisible by 8
+        Test: We should allocate random values and loop through every size of the chunks in the heap to see if they are divisible by 8.
+
+    (7) Requirement: Allocate more than the entire heap at initialization
+        Detection Method: Immediately attempt to allocate greater than 4096 bytes as the first call to malloc()
+        Test: Create a pointer and try to malloc(6000) bytes. This should fail and print an error.
+
+    (8) Requirement: Allocate 0 bytes on initialization
+        Detection Method: Immediately attempt to allocate 0 bytes as the first call to malloc()
+        Test: Create a pointer and try to malloc(0) bytes. This should print an error.
+
+    (9) Requirement: Coalesce at the start of the heap
+        Detection Method: Create three pointers sequentially with the first two being relatively small, and the third exhausting the heap. Freeing the first two
+        pointers and immediately trying to allocate a number larger than any one of them but smaller than their combined value should indicate that they
+        have coalesced correctly.
+        Test: Create three pointers of size 150, 150, and 3768. Free the first two pointers, and attempt to malloc() a size greater than 150 and less than 300
+        (plus header size). Expected to succeed.
+
+    (10) Requirement: Coalesce at the end of the heap
+        Detection Method: Create three pointers sequentially with the last two being relatively small, and the first one exhausting the heap. 
+        Freeing the last two pointers and immediately trying to allocate a number larger than any one of them but smaller 
+        than their combined value should indicate that they have coalesced correctly.
+        Test: Create three pointers of size 3768, 150, and 150. Free the last two pointers, and attempt to malloc() a size greater than 150 and less than 300
+        (plus header size). Expected to succeed.
+
+   (11) Requirement: Null ptr free
+        Detection Method: Observe the behavior of simply freeing a NULL pointer
+        Test: Create a pointer n with the value of NULL. Immediately free.
+
+   (12) Requirement: Allocate the entire heap on initialization
+        Detection Method: Allocate a value within the last 8 bytes of the heap. Expected to fail.
+        Test: Create a pointer p and malloc(4096), the entire heap, and observe behavior
+    (13)
+        This is the given sample test. It fill an array of pointer with 56 objects, each holding 56 bytes and checks if the byte pattern matches as expected.
+    (14)
+        Requirement: Allocates entire heap with integers values 0-255, then proceeds to check alignment
+        per byte to see if the alignment is correct. If there is an error in alignment it will print a message and break the loop.
+        Proper pattern being 0-255 0 0 0 0-255 0 0 0....
+    
+
+Design Notes
+    To Run:
+    cd P1
+    $ make
+    $ ./memgrind
+
+    -Each test program memtest.c and memtest2.c were excluded or included from the build via commenting out a define at the top of the file.
+     This was a simple way to trying different test programs files under the time constraints.
