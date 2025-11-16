@@ -13,7 +13,6 @@
 void HandleInteractiveMode();
 void HandleBatchMode(int fileID);
 void ExecuteCommandLine(char* line);
-int ExecutePipeLine(CommandData commands[], int numCommands);
 bool IsInteractive(int argc);
 void CleanUp(CommandData* commandData, int numCommands);
 
@@ -147,9 +146,7 @@ void HandleInteractiveMode()
 
     PRINT("Command: %s\n",commandStr);
     ExecuteCommandLine(commandStr);
-
   
-    
 }
 
 void HandleBatchMode(int fileID)
@@ -210,6 +207,12 @@ void HandleBatchMode(int fileID)
     char commandStr[commandLen + 1];
     strncpy(commandStr, GLOBAL_BUFFER, commandLen);
     commandStr[commandLen] = '\0';
+
+    //! IMPLEMENTATION DOES NOT ALLOW FOR COMMMENTS TO BE IN BETWEEN NEWLINES.
+    char* commentStart = strchr(commandStr, '#');
+    if(commentStart != NULL)
+    //If a comment is found, truncates rest of line.
+        { *commentStart = '\0'; }
 
     int leftoverLen = LINE_LEN - (commandLen + 1);
         
@@ -290,7 +293,7 @@ void ExecuteCommandLine(char* line)
     /*CHECK FOR exit, cd, AND, die COMMANDS*/
     bool isBuiltIn = false;
     char* cmd = commands[0].arguments->data[0];
-    
+
     if(numCommands == 1 && 
         commands[0].arguments->data[0] != NULL &&
         commands[0].arguments->data[0][0] != '/')
@@ -311,8 +314,10 @@ void ExecuteCommandLine(char* line)
         
     }
 
-    
-    if(strcmp(cmd, SH_EXIT) == 0 || strcmp(cmd, SH_DIE) == 0)
+    cmd = commands[numCommands - 1].arguments->data[0];
+    if((strcmp(cmd, SH_EXIT) == 0 || strcmp(cmd, SH_DIE) == 0))
+    //check if last arg is either a die or exit command for case : prog | exit/die
+    //THIS WILL ONLY WORK IN THE CASE THAT THE LAST ARG IS die OR exit OTHERWISE IT WILL JUST BE SKIPPED
     {
         isBuiltIn = true;
         if(strcmp(cmd, SH_DIE) == 0 && commands[0].arguments->data[1] != NULL)
@@ -320,6 +325,10 @@ void ExecuteCommandLine(char* line)
         {
             HandleDie(commands);
             LAST_EXIT_STATUS = 1;
+        }
+        else
+        {
+            printf("mysh: Exiting mysh.....\n"); 
         }
         EXIT_ = true;
         LAST_EXIT_STATUS = (strcmp(cmd, SH_DIE) == 0) ? 1 : 0;

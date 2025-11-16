@@ -8,3 +8,7 @@
 
 int HandleDie(CommandData commands[]);
 int HandleCD(CommandData commands[]);
+int HandleWhich(char* args[]);
+int HandlePWD();
+char* FindFullPath(char* command);
+void FreeFullPath(char* path_to_free, char* command);
