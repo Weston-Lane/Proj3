@@ -12,5 +12,6 @@ typedef struct CommandData
 
 void CommandData_CreateCommand(CommandData* commandData, char* line, int length);
 void Print_Command(CommandData* commandData);
+void Free_Command(CommandData* commandData);
 
 #endif

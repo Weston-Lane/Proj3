@@ -1,6 +1,6 @@
 CC = gcc
 # Base CFLAGS for *all* builds
-BASE_CFLAGS = -std=c99 -Wall -Wextra -I./src
+BASE_CFLAGS = -std=c99 -D_POSIX_C_SOURCE=200809L -Wall -Wextra -I./src
 
 SRC_DIR = src
 SRCS = $(wildcard $(SRC_DIR)/*.c)
@@ -16,7 +16,7 @@ LDFLAGS_RELEASE =
 TARGET_DEBUG = mysh_debug
 BUILD_DIR_DEBUG = intermediate/debug
 OBJS_DEBUG = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR_DEBUG)/%.o,$(SRCS))
-CFLAGS_DEBUG = $(BASE_CFLAGS) -DDEBUG -g -fsanitize=undefined,address
+CFLAGS_DEBUG = $(BASE_CFLAGS) -DDEBUG -g -fsanitize=undefined,address 
 LDFLAGS_DEBUG = -fsanitize=undefined,address
 
 

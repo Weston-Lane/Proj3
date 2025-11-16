@@ -38,9 +38,17 @@ ArrayList* List_Create(size_t initial_capacity)
  */
 void List_Free(ArrayList *list) 
 {
-    if (list) {
+    if (list) 
+    {
+        for(int i = 0; i<list->size;i++)
+        {
+            free(list->data[i]);
+        }
         free(list->data); 
+        free(list);
     }
+    
+     
 }
 
 /**
