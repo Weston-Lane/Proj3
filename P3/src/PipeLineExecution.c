@@ -110,7 +110,7 @@ int ExecutePipeLine(CommandData commands[], int numCommands)
  
             else if (strcmp(cmd, SH_EXIT) == 0) 
             {
-                printf("mysh: Exiting mysh.....\n"); 
+                //printf("mysh: Exiting mysh.....\n"); 
                 exit(0); 
             }
 

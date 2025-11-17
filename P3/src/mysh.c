@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "MacDef.h"
 #include "ArrayList.h"
@@ -24,17 +25,41 @@ static int LAST_EXIT_STATUS = -1;
 
 int main(int argc, char** argv)
 {
-    (void)argv;
+    
+    int fileID;
+    bool is_interactive;
 
-    int fileID = 0;
-    INTERACT_MODE = IsInteractive(argc);
-    if(INTERACT_MODE)
+    // --- File-Batch Mode ---//
+    if (argc == 2) 
     {
-        printf("Welcome to my terminal!\n");
-    }
-    else
+        fileID = open(argv[1], O_RDONLY);
+        if (fileID < 0) {
+            perror("mysh: open");
+            exit(1);
+        }
+        INTERACT_MODE = false;
+
+    } 
+    // -- Check if Interactive or Pipe or Redirect -- //
+    else if (argc == 1) 
     {
-        fileID = open(argv[1],O_RDONLY);
+        
+        if (isatty(STDIN_FILENO)) 
+        {
+            INTERACT_MODE = true;
+            fileID = STDIN_FILENO;
+            printf("Welcome to my terminal!\n");
+        } 
+        else
+        {
+            INTERACT_MODE = false;
+            fileID = STDIN_FILENO;
+        }
+    } 
+    else 
+    {
+        fprintf(stderr, "Usage: %s [script_file]\n", argv[0]);
+        exit(1);
     }
 
     while(!EXIT_)
@@ -62,14 +87,6 @@ int main(int argc, char** argv)
 
     
     
-}
-
-bool IsInteractive(int argc)
-{
-    if(argc == 1 )
-        { return isatty(STDIN_FILENO); }
-    else
-        { return false; }
 }
 
 void HandleInteractiveMode()
