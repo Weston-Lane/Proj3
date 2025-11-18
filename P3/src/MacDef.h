@@ -1,4 +1,4 @@
-#define BUFFER_SIZE 4096
+#define BUFFER_SIZE 1048576
 
 #if DEBUG
     #define PRINT(...) printf(__VA_ARGS__)

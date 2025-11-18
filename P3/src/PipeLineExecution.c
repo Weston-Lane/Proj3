@@ -1,4 +1,3 @@
-#include "PipeLineExecution.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,10 +7,10 @@
 #include <fcntl.h>    
 #include <sys/stat.h>
 
-#include "MacDef.h"
 #include "BuiltIns.h"
+#include "PipeLineExecution.h"
 
-int ExecutePipeLine(CommandData commands[], int numCommands) 
+int ExecutePipeLine(CommandData commands[], int numCommands, bool isTerminalInput) 
 {
     #if DEBUG
         printf("--- Printing all commands after loop ---\n");
@@ -48,9 +47,22 @@ int ExecutePipeLine(CommandData commands[], int numCommands)
             perror("mysh: fork");
             return 1;
         }
+        
         /************IN CHILD********************************/
         if (pids[i] == 0) 
         {
+            if (isTerminalInput && in_fd == STDIN_FILENO && commands[i].inFile == NULL) 
+            {
+                // Redirect stdin to /dev/null to prevent
+                // this child from stealing our shell's input.
+                int dev_null_fd = open("/dev/null", O_RDONLY);
+                if (dev_null_fd < 0) {
+                    perror("mysh: open /dev/null");
+                    exit(1);
+                }
+                dup2(dev_null_fd, STDIN_FILENO);
+                close(dev_null_fd);
+            }
             
             if (in_fd != STDIN_FILENO)
             //if STDIN has been changed from other child
@@ -110,7 +122,10 @@ int ExecutePipeLine(CommandData commands[], int numCommands)
  
             else if (strcmp(cmd, SH_EXIT) == 0) 
             {
-                //printf("mysh: Exiting mysh.....\n"); 
+                if(commands[i].outFile != NULL)
+                {
+                    printf("mysh: Exiting mysh.....\n"); 
+                }
                 exit(0); 
             }
 
