@@ -26,8 +26,7 @@ static int LAST_EXIT_STATUS = -1;
 int main(int argc, char** argv)
 {
     
-    int fileID;
-    bool is_interactive;
+    int fileID = 0;
 
     // --- File-Batch Mode ---//
     if (argc == 2) 
@@ -99,6 +98,7 @@ void HandleInteractiveMode()
     if(newLinePos == NULL)
     //call read() for the first time or again if line does not have \n
     {
+        
         while(newLinePos == NULL)
         {
             if(LINE_LEN == BUFFER_SIZE)
@@ -174,6 +174,7 @@ void HandleBatchMode(int fileID)
     if(newLinePos == NULL)
     //call read() for the first time or again if line does not have \n
     {
+        
         while(newLinePos == NULL)
         {
             if(LINE_LEN == BUFFER_SIZE)
@@ -182,8 +183,6 @@ void HandleBatchMode(int fileID)
                 LINE_LEN = 0;
                 break;
             }
-            
-            
             
             int bytesRead = read(fileID, 
                              GLOBAL_BUFFER + LINE_LEN, //append to end
@@ -327,7 +326,7 @@ void ExecuteCommandLine(char* line)
 
     if(!isBuiltIn)
     {
-        LAST_EXIT_STATUS = ExecutePipeLine(commands, numCommands);
+        LAST_EXIT_STATUS = ExecutePipeLine(commands, numCommands, INTERACT_MODE);
         
     }
 

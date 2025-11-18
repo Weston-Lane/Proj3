@@ -1,0 +1,1 @@
+STDOUT: hello from test_out_err
